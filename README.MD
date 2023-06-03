@@ -1,6 +1,6 @@
 Para compilar:
 
-    "D:\Erlang\Erlang OTP\bin\erlc.exe" water_simulatorzerl
+    "D:\Erlang\Erlang OTP\bin\erlc.exe" water_simulator.erl
 
 Para executar: 
 
