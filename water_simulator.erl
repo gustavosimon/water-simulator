@@ -35,3 +35,8 @@ get_energy() ->
 % 3. A geração de moléculas deve ser constante e de forma aleatória com intervalo de tempo parametrizável; ok
 % 4. Cada processo deve ser identificado unicamente e apresentar uma mensagem quando criado informando esta identificação; ok
 % 5. A aplicação deve identificar as combinações realizadas, apresentando a identificação dos elementos combinados;
+ 
+% Fazer um novo processo que fica varrendo uma lista para saber se pode combinar as moleculas
+% Salvar o PID e mover para o generate_molecule para ele saber para onde mandar a molécula pronta
+% Fazer via mensagem 
+% Enviar a molécula somente quando ela estiver pronta
