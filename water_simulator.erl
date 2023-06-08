@@ -18,13 +18,13 @@ generate_molecule(PidA) ->
 
 handle_hydrogen(Pid) ->
     get_energy(),
-    io:format("A molécula de Hidrogênio obteve energia suficiente ~p~n", [self()]),
+    io:format("A molecula de Hidrogenio obteve energia suficiente ~p~n", [self()]),
     Pid ! {self(), "hydrogen"},
     ok.
 
 handle_oxygen(Pid) ->
     get_energy(),
-    io:format("A molécula de Oxigênio obteve energia suficiente ~p~n", [self()]),
+    io:format("A molecula de Oxigenio obteve energia suficiente ~p~n", [self()]),
     Pid ! {self(), "oxygen"},
     ok.
 
@@ -40,7 +40,7 @@ combine_molecules_or_add_to_list(HydrogenList, OxygenList) ->
         {combined, NewHydrogenList, NewOxygenList, CombinedItems} ->
             io:format("Os seguintes itens foram combinados: ~p~n", [CombinedItems]);
         {not_combined, NewHydrogenList, NewOxygenList, []} ->
-            io:format("Não combinou nenhum item nessa iteração~n")
+            ok
     end,
     receive
         {Pid, Molecule} ->
