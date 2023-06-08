@@ -1,8 +1,8 @@
 -module(water_simulator).
--export([start/0, generate_molecule/1, handle_hydrogen/1, handle_oxygen/1, get_energy/0, combine_molecules_or_add_to_list/1]).
+-export([start/0, generate_molecule/1, handle_hydrogen/1, handle_oxygen/1, get_energy/0, combine_molecules_or_add_to_list/2, combine/2, process_message/4]).
 
 start() -> 
-    Pid = spawn(?MODULE, combine_molecules_or_add_to_list, [[]]),
+    Pid = spawn(?MODULE, combine_molecules_or_add_to_list, [[], []]),
     generate_molecule(Pid).
 
 generate_molecule(PidA) ->
@@ -18,12 +18,14 @@ generate_molecule(PidA) ->
 
 handle_hydrogen(Pid) ->
     get_energy(),
-    Pid ! {message, "hydrogen"},
+    io:format("A molécula de Hidrogênio obteve energia suficiente ~p~n", [self()]),
+    Pid ! {self(), "hydrogen"},
     ok.
 
 handle_oxygen(Pid) ->
     get_energy(),
-    Pid ! {message, "oxygen"},
+    io:format("A molécula de Oxigênio obteve energia suficiente ~p~n", [self()]),
+    Pid ! {self(), "oxygen"},
     ok.
 
 get_energy() -> 
@@ -32,31 +34,35 @@ get_energy() ->
     RandomValue = rand:uniform(Max - Min + 1) + Min,
     timer:sleep(RandomValue).
 
-combine_molecules_or_add_to_list(_MoleculesList) ->
-
-% 
-% Está recebendo a molécula que está pronta para ser combinada
-% Falta criar a lógica de verificar na lista se já possui moléculas disponíveis para fazer a combinação de água
-% 
-
-    receive
-        {message, Molecule} -> 
-            case Molecule of
-                "hydrogen" -> io:format("Recebido um Hidrogenio!");
-                "oxygen" -> io:format("Recebido um Oxigenio!")
-            end
+combine_molecules_or_add_to_list(HydrogenList, OxygenList) ->
+    Result = combine(HydrogenList, OxygenList),
+    case Result of
+        {combined, NewHydrogenList, NewOxygenList, CombinedItems} ->
+            io:format("Os seguintes itens foram combinados: ~p~n", [CombinedItems]);
+        {not_combined, NewHydrogenList, NewOxygenList, []} ->
+            io:format("Não combinou nenhum item nessa iteração~n")
     end,
+    receive
+        {Pid, Molecule} ->
+            {SecondNewHydrogenList, SecondNewOxygenList} = process_message(Molecule, Pid, NewHydrogenList, NewOxygenList)
+    end,
+    combine_molecules_or_add_to_list(SecondNewHydrogenList, SecondNewOxygenList).
 
+combine(HydrogenList, OxygenList) ->
+    case {length(HydrogenList), length(OxygenList)} of
+        {N, M} when N >= 2, M >= 1 ->
+            NewHydrogenList = lists:sublist(HydrogenList, 2, length(HydrogenList) - 2),
+            NewOxygenList = tl(OxygenList),
+            CombinedItems = lists:sublist(HydrogenList, 1, 2) ++ lists:sublist(OxygenList, 1, 1),
+            {combined, NewHydrogenList, NewOxygenList, CombinedItems};
+        _ ->
+            {not_combined, HydrogenList, OxygenList, []}
+    end.
 
-    combine_molecules_or_add_to_list([]).
+process_message("hydrogen", Pid, HydrogenList, OxygenList) ->
+    NewHydrogenList = [Pid | HydrogenList],
+    {NewHydrogenList, OxygenList};
 
-% 1. Cada molécula gerada, hidrogênio e oxigênio deve ser um processo em Erlang; ok
-% 2. O tempo para que cada molécula adquira energia suficiente deve variar entre 10s e 30s; ok
-% 3. A geração de moléculas deve ser constante e de forma aleatória com intervalo de tempo parametrizável; ok
-% 4. Cada processo deve ser identificado unicamente e apresentar uma mensagem quando criado informando esta identificação; ok
-% 5. A aplicação deve identificar as combinações realizadas, apresentando a identificação dos elementos combinados;
- 
-% Fazer um novo processo que fica varrendo uma lista para saber se pode combinar as moleculas
-% Salvar o PID e mover para o generate_molecule para ele saber para onde mandar a molécula pronta
-% Fazer via mensagem 
-% Enviar a molécula somente quando ela estiver pronta
+process_message("oxygen", Pid, HydrogenList, OxygenList) ->
+    NewOxygenList = [Pid | OxygenList],
+    {HydrogenList, NewOxygenList}.
